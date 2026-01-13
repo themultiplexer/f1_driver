@@ -206,10 +206,10 @@ void startupSequence(hid_device* device) {
     setControlButtonLED(ControlLEDButton::SYNC, 0.1f, true);
 
     // Set all stop button LEDs
-    setStopButtonLED(StopLEDButton::STOP1, 0.1f, true);
-    setStopButtonLED(StopLEDButton::STOP2, 0.1f, true);
-    setStopButtonLED(StopLEDButton::STOP3, 0.1f, true);
-    setStopButtonLED(StopLEDButton::STOP4, 0.1f, true);
+    setStopButtonLED(0, 0.1f, true);
+    setStopButtonLED(1, 0.2f, true);
+    setStopButtonLED(2, 0.3f, true);
+    setStopButtonLED(3, 0.4f, true);
  
     std::cout << "  - Startup sequence completed!" << std::endl;
 }

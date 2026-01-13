@@ -68,7 +68,6 @@ private:
     RtMidiIn* midi_in;                      // MIDI input port (for future LED control)
     MatrixButtonState button_state;         // Track button states for change detection
     AnalogControlState analog_state;        // Track knob and fader states for change detection
-    bool initialized;                       // Track initialization state
     
     // Helper functions
     int matrixPositionToMidiNote(int row, int col);
@@ -84,11 +83,14 @@ public:
     void cleanup();
     
     // Matrix button MIDI functions
+    void updateButtons(const unsigned char* input_buffer);
     void updateMatrixButtonStates(const unsigned char* input_buffer);
+    void sendButtonPress(int index);
     void sendMatrixButtonPress(int row, int col);
     void sendMatrixButtonRelease(int row, int col);
     
     // Analog control MIDI functions (NEW)
+    void mycallback(double deltatime, std::vector<unsigned char> *message);
     void updateKnobStates(const unsigned char* input_buffer);
     void updateFaderStates(const unsigned char* input_buffer);
     void sendKnobChange(int knob_number, int value);

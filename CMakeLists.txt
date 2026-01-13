@@ -75,6 +75,7 @@ add_executable(f1_driver
 
 # Include directories
 target_include_directories(f1_driver PRIVATE 
+    include
     ${HIDAPI_INCLUDE_DIR}
     ${RTMIDI_INCLUDE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}

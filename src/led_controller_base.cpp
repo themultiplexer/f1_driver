@@ -123,26 +123,6 @@ int getControlButtonIndex(ControlLEDButton button) {
     return -1; // Error case - should never happen with valid enum
 }
 
-/*
- * Maps StopLEDButton enum to array index
- *
- * This function provides explicit mapping from enum values to array indices.
- * This is safer than relying on implicit enum values and makes the mapping
- * clear and maintainable.
- *
- * @param button: The stop button enum value
- * @return: Array index (0-3), or -1 if invalid button
- */
-int getStopButtonIndex(StopLEDButton button) {
-    switch (button) {
-        case StopLEDButton::STOP1: return 0;    // Array index 0
-        case StopLEDButton::STOP2: return 1;    // Array index 1
-        case StopLEDButton::STOP3: return 2;    // Array index 2
-        case StopLEDButton::STOP4: return 3;    // Array index 3
-    }
-    return -1; // Error case - should never happen with valid enum
-}
-
 // =======================================
 // Get button state functions
 // =======================================
@@ -215,30 +195,6 @@ LEDState getControlButtonState(ControlLEDButton button) {
     
     // Return the stored original state
     return control_states[index];
-}
-
-/*
- * Gets the original state for a special button
- *
- * Returns the original brightness that was set for this special button,
- * before any 7-bit conversion. Color is always stored as white for special
- * buttons since they only have single-color LEDs.
- *
- * @param button: The special button to query
- * @return: LEDState with original brightness, or error state if invalid button
- */
-LEDState getStopButtonState(StopLEDButton button) {
-    // Map button to array index
-    int index = getStopButtonIndex(button);
-    
-    // Validate index
-    if (index < 0 || index > 3) {
-        std::cerr << "Error: Invalid stop button in getStopButtonState()" << std::endl;
-        return {0.0f}; // Return error state
-    }
-    
-    // Return the stored original state
-    return stop_states[index];
 }
 
 // =============================================================================
@@ -506,10 +462,6 @@ void clearAllLEDs() {
     }
 }
 
-// =============================================================================
-// MATRIX LED FUNCTIONS - Control the 4x4 RGB button grid
-// =============================================================================
-
 /*
 * Sets a matrix button LED to a specific color and brightness
 * Saves the original color and brightness in the state storage
@@ -523,13 +475,6 @@ void clearAllLEDs() {
 * @return: true if successful, false if error
 */
 bool setMatrixButtonLED(int row, int col, LEDColor color, float brightness, bool store_led_state) {
-    // Step 1: Validate matrix position
-    if (!isValidMatrixPosition(row, col)) {
-        std::cerr << "Error: Invalid matrix position (" << row << "," << col 
-                  << "). Must be 1-4 for both row and column." << std::endl;
-        return false;
-    }
-
     // Step 2: Clamp brightness to valid range
     if (brightness < 0.0f) brightness = 0.0f;
     if (brightness > 1.0f) brightness = 1.0f;
@@ -544,7 +489,7 @@ bool setMatrixButtonLED(int row, int col, LEDColor color, float brightness, bool
     // Step 4: Calculate the byte position for this matrix button
     // Matrix mapping: (row-1) * 4 + (col-1) gives button index (0-15)
     // Each button has 3 bytes (BRG), so multiply by 3
-    int button_index = (row - 1) * MATRIX_COLS + (col - 1);
+    int button_index = (row) * MATRIX_COLS + (col);
     int base_byte = LED_BYTE_MATRIX_START + (button_index * MATRIX_LEDS_PER_BUTTON);
     
     // Step 5: Get the color values in BRG format with brightness
@@ -581,10 +526,6 @@ bool setMatrixButtonLED(int row, int col, LEDColor color, float brightness, bool
 bool setSpecialButtonLED(SpecialLEDButton button, float brightness, bool store_led_state) {
     // Step 1: Get array index for this button
     int index = getSpecialButtonIndex(button);
-    if (index < 0 || index > 4) {
-        std::cerr << "Error: Invalid special button in setSpecialButtonLED()" << std::endl;
-        return false;
-    }
 
     // Step 2: Clamp brightness to valid range
     if (brightness < 0.0f) brightness = 0.0f;
@@ -636,10 +577,6 @@ bool setSpecialButtonLED(SpecialLEDButton button, float brightness, bool store_l
     }
 }
 
-// =============================================================================
-// CONTROL BUTTON LED FUNCTIONS - Control control button LEDs
-// =============================================================================
-
 /*
 * Sets the LED of a control button to a specific brightness
 * Saves the original brightness in state storage
@@ -653,10 +590,6 @@ bool setSpecialButtonLED(SpecialLEDButton button, float brightness, bool store_l
 bool setControlButtonLED(ControlLEDButton button, float brightness, bool store_led_state) {
     // Step 1: Get array index for this button
     int index = getControlButtonIndex(button);
-    if (index < 0 || index > 2) {
-        std::cerr << "Error: Invalid control button in setControlButtonLED()" << std::endl;
-        return false;
-    }
 
     // Step 2: Clamp brightness to valid range
     if (brightness < 0.0f) brightness = 0.0f;
@@ -702,10 +635,6 @@ bool setControlButtonLED(ControlLEDButton button, float brightness, bool store_l
     }
 }
 
-// =============================================================================
-// STOP BUTTON LED FUNCTIONS - Control stop button LEDs (2 LEDs per button)
-// =============================================================================
-
 /*
 * Sets both LEDs of a stop button to a specific brightness
 * Saves the original brightness in state storage
@@ -716,13 +645,8 @@ bool setControlButtonLED(ControlLEDButton button, float brightness, bool store_l
 * @param store_led_state: Whether to store the LED state (original brightness)
 * @return: true if successful, false if error
 */
-bool setStopButtonLED(StopLEDButton button, float brightness, bool store_led_state) {    
+bool setStopButtonLED(int index, float brightness, bool store_led_state) {    
     // Step 1: Get array index for this button
-    int index = getStopButtonIndex(button);
-    if (index < 0 || index > 3) {
-        std::cerr << "Error: Invalid stop button in setStopButtonLED()" << std::endl;
-        return false;
-    }
 
     // Step 2: Clamp brightness to valid range
     if (brightness < 0.0f) brightness = 0.0f;
@@ -739,26 +663,8 @@ bool setStopButtonLED(StopLEDButton button, float brightness, bool store_led_sta
     unsigned char led_value = convertTo7Bit(255, brightness);
 
     // Step 5: Determine byte positions for both LEDs of this stop button
-    int left_byte, right_byte;
-    
-    switch (button) {
-        case StopLEDButton::STOP1:
-            right_byte = LED_BYTE_STOP_START + LED_OFFSET_STOP1_RIGHT;
-            left_byte = LED_BYTE_STOP_START + LED_OFFSET_STOP1_LEFT;
-            break;
-        case StopLEDButton::STOP2:
-            right_byte = LED_BYTE_STOP_START + LED_OFFSET_STOP2_RIGHT;
-            left_byte = LED_BYTE_STOP_START + LED_OFFSET_STOP2_LEFT;
-            break;
-        case StopLEDButton::STOP3:
-            right_byte = LED_BYTE_STOP_START + LED_OFFSET_STOP3_RIGHT;
-            left_byte = LED_BYTE_STOP_START + LED_OFFSET_STOP3_LEFT;
-            break;
-        case StopLEDButton::STOP4:
-            right_byte = LED_BYTE_STOP_START + LED_OFFSET_STOP4_RIGHT;
-            left_byte = LED_BYTE_STOP_START + LED_OFFSET_STOP4_LEFT;
-            break;
-    }
+    int left_byte = LED_BYTE_STOP_START + (7 - (index * 2));
+    int right_byte = LED_BYTE_STOP_START + (7 - (index * 2)) - 1;
     
     // Step 6: Set both LED values in the buffer
     led_buffer[right_byte] = led_value;
@@ -773,10 +679,6 @@ bool setStopButtonLED(StopLEDButton button, float brightness, bool store_led_sta
     }
 }
 
-// =============================================================================
-// UTILITY FUNCTIONS FOR DEBUGGING
-// =============================================================================
-
 /*
 * Prints the current LED state storage arrays
 * Useful for debugging toggle system and verifying state storage accuracy
@@ -786,9 +688,9 @@ void printLEDStates() {
     
     // Print matrix button states
     std::cout << "Matrix button states (original values):" << std::endl;
-    for (int row = 1; row <= 4; row++) {
+    for (int row = 0; row < 4; row++) {
         std::cout << "  Row " << row << ": ";
-        for (int col = 1; col <= 4; col++) {
+        for (int col = 0; col < 4; col++) {
             LEDStateMatrix state = matrix_states[row][col];
             std::cout << "(" << (int)state.color << "," << std::fixed 
                       << std::setprecision(2) << state.brightness << ") ";
@@ -892,8 +794,8 @@ void testAllLEDs() {
     LEDColor test_colors[] = {LEDColor::red, LEDColor::green, LEDColor::blue, LEDColor::white};
     
     for (int i = 0; i < 4; i++) {
-        for (int row = 1; row <= 4; row++) {
-            for (int col = 1; col <= 4; col++) {
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
                 setMatrixButtonLED(row, col, test_colors[i], 0.5f, false);
                 usleep(100000);  // Sleep for 100ms
             }
@@ -929,7 +831,7 @@ void testAllLEDs() {
     // Test stop button LEDs
     std::cout << "Testing stop button LEDs..." << std::endl;
     for (int i = 1; i <= 4; i++) {
-        setStopButtonLED(static_cast<StopLEDButton>(i), 0.8f, false);
+        setStopButtonLED(i, 0.8f, false);
         usleep(100000);  // Sleep for 100ms
     }
     std::cout << "All stop button LEDs turned on" << std::endl;

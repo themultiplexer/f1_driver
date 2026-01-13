@@ -1,12 +1,11 @@
-#include "include/input_reader_base.h"       // Include header file
+#include "input_reader_base.h"       // Include header file
 
 #include <iostream>             // For std::cout and std::cerr
+#include <cmath>
 #include <iomanip>              // For std::hex (hexadecimal printing)
+#include <ostream>
+#include <sys/types.h>
 // #include <hidapi/hidapi.h>   // included already in header
-
-// =============================================================================
-// MAIN INPUT READING FUNCTION
-// =============================================================================
 
 /*
 * Reads an input report from the Traktor Kontrol F1 device
@@ -71,13 +70,6 @@ bool readInputReport(hid_device *device, unsigned char *buffer) {
 */
 
 bool isSpecialButtonPressed(const unsigned char* buffer, SpecialButton button) {
-  
-    // Step 1: Safety check - make sure buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "Error: Buffer is null in isSpecialButtonPressed()" << std::endl;
-        return false;
-    }
-
     // Step 2: Get the special buttons byte (byte 3 in the report)
     unsigned char special_byte = buffer[BUTTON_BYTE_SPECIAL];  // buffer[3]
 
@@ -128,48 +120,14 @@ bool isSpecialButtonPressed(const unsigned char* buffer, SpecialButton button) {
 * @return: true if the button is pressed, false if not pressed
 */
 
-bool isStopButtonPressed(const unsigned char* buffer, StopButton button) {
-
-    // Step 1: Safety check - make sure buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "Error: Buffer is null in isStopButtonPressed()" << std::endl;
-        return false;
-    }
-
+bool isStopButtonPressed(const unsigned char* buffer, int button) {
     // Step 2: Get the stop buttons byte (byte 3 in the report)
     unsigned char stop_byte = buffer[BUTTON_BYTE_STOP_AND_CONTROL];  // buffer[4]
-
-    // Step 3: Determine which bit mask to use based on the button requested
-    unsigned char button_mask;
-
-    switch (button) {
-        case StopButton::STOP1:
-            button_mask = BIT_MASK_STOP1;           // 0x80 (bit 7)
-            break;
-        case StopButton::STOP2:
-            button_mask = BIT_MASK_STOP2;           // 0x40 (bit 6)
-            break;
-        case StopButton::STOP3:
-            button_mask = BIT_MASK_STOP3;           // 0x20 (bit 5)
-            break;
-        case StopButton::STOP4:
-            button_mask = BIT_MASK_STOP4;           // 0x10 (bit 4)
-            break;
-        default:
-            std::cerr << "Error: Unknown stop button requested" << std::endl;
-            return false;
-    }
-
-    // Step 4: Use bitwise AND to check if the specific bit is set
+    unsigned char button_mask = 0x01 << (7 - button);
     bool is_pressed = (stop_byte & button_mask) != 0;
 
-    // Step 5: Return the result
     return is_pressed;
 }
-
-// =============================================================================
-// CONTROL BUTTON CHECKING FUNCTIONS
-// =============================================================================
 
 /*
 * Checks if a specific control button is currently pressed
@@ -216,10 +174,6 @@ bool isControlButtonPressed(const unsigned char* buffer, ControlButton button) {
     return is_pressed;
 }
 
-// =============================================================================
-// MATRIX BUTTON CHECKING FUNCTIONS
-// =============================================================================
-
 /*
 * Checks if a specific matrix button is currently pressed
  * Matrix is a 4x4 grid: rows 1-4, columns 1-4
@@ -234,81 +188,13 @@ Matrix Layout:          Byte Mapping:
 (1,2) (2,2) (3,2) (4,2)   Byte 1: bits 3,2,1,0  
 (1,3) (2,3) (3,3) (4,3)   Byte 2: bits 7,6,5,4
 (1,4) (2,4) (3,4) (4,4)   Byte 2: bits 3,2,1,0
-
 */
 
 bool isMatrixButtonPressed(const unsigned char* buffer, int row, int col) {
-    
-    // Step 1: Safety checks
-    if (buffer == nullptr) {
-        std::cerr << "Error: Buffer is null in isMatrixButtonPressed()" << std::endl;
-        return false;
-    }
-
-    // Step 2: Validate row and column ranges
-    if (row < 1 || row > 4 || col < 1 || col > 4) {
-        std::cerr << "Error: Invalid matrix position (" << row << "," << col 
-                  << "). Must be 1-4 for both row and column." << std::endl;
-        return false;
-    }
-
-    // Step 3: Determine which byte and bit to check
-    unsigned char matrix_byte;
-    unsigned char bit_mask;
-
-    // Switch statement to handle all 16 combinations
-    switch (row) {
-        case 1:
-            matrix_byte = buffer[BUTTON_BYTE_MATRIX_TOP];  // Byte 1
-            switch (col) {
-                case 1: bit_mask = BIT_MASK_MATRIX_1_1; break;  // 0x80
-                case 2: bit_mask = BIT_MASK_MATRIX_2_1; break;  // 0x40
-                case 3: bit_mask = BIT_MASK_MATRIX_3_1; break;  // 0x20
-                case 4: bit_mask = BIT_MASK_MATRIX_4_1; break;  // 0x10
-            }
-            break;
-            
-        case 2:
-            matrix_byte = buffer[BUTTON_BYTE_MATRIX_TOP];  // Byte 1
-            switch (col) {
-                case 1: bit_mask = BIT_MASK_MATRIX_1_2; break;  // 0x08
-                case 2: bit_mask = BIT_MASK_MATRIX_2_2; break;  // 0x04
-                case 3: bit_mask = BIT_MASK_MATRIX_3_2; break;  // 0x02
-                case 4: bit_mask = BIT_MASK_MATRIX_4_2; break;  // 0x01
-            }
-            break;
-            
-        case 3:
-            matrix_byte = buffer[BUTTON_BYTE_MATRIX_BOTTOM];  // Byte 2
-            switch (col) {
-                case 1: bit_mask = BIT_MASK_MATRIX_1_3; break;  // 0x80
-                case 2: bit_mask = BIT_MASK_MATRIX_2_3; break;  // 0x40
-                case 3: bit_mask = BIT_MASK_MATRIX_3_3; break;  // 0x20
-                case 4: bit_mask = BIT_MASK_MATRIX_4_3; break;  // 0x10
-            }
-            break;
-            
-        case 4:
-            matrix_byte = buffer[BUTTON_BYTE_MATRIX_BOTTOM];  // Byte 2
-            switch (col) {
-                case 1: bit_mask = BIT_MASK_MATRIX_1_4; break;  // 0x08
-                case 2: bit_mask = BIT_MASK_MATRIX_2_4; break;  // 0x04
-                case 3: bit_mask = BIT_MASK_MATRIX_3_4; break;  // 0x02
-                case 4: bit_mask = BIT_MASK_MATRIX_4_4; break;  // 0x01
-            }
-            break;
-    }
-
-    // Step 4: Check if the bit is set using bitwise AND
-    bool is_pressed = (matrix_byte & bit_mask) != 0;
-
-    // Step 5: Return the result
-    return is_pressed;
+    unsigned char bit_mask = (0x01 << (3-col)) << ((1-(row%2)) * 4);
+    return (buffer[(row/2)+1] & bit_mask) != 0;
 }
 
-// =============================================================================
-// UTILITY FUNCTION FOR DEBUGGING
-// =============================================================================
 
 /*
 * Prints the raw input report in hexadecimal format

@@ -36,19 +36,6 @@ bool FaderInputReader::initialize() {
 * @return: Normalized float value from 0.000 to 1.000
 */
 float FaderInputReader::getFaderValue(const unsigned char* buffer, int fader_number) {
-    // Step 1: Check if device buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "FaderInputReader Error: Buffer is null" << std::endl;
-        return 0.0f;
-    }
-
-    // Step 2: Validate fader number range
-    if (fader_number < 1 || fader_number > FADER_COUNT) {
-        std::cerr << "FaderInputReader Error: Invalid fader number " << fader_number 
-                  << ". Must be 1-" << FADER_COUNT << std::endl;
-        return 0.0f;
-    }
-
     // Step 3: Extract raw 12-bit value from buffer
     uint16_t raw_value = extractRawFaderValue(buffer, fader_number);
 
@@ -67,19 +54,6 @@ float FaderInputReader::getFaderValue(const unsigned char* buffer, int fader_num
 * @return: true if fader has changed significantly, false otherwise
 */
 bool FaderInputReader::hasFaderChanged(const unsigned char* buffer, int fader_number, float threshold) {
-    // Step 1: Check if buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "FaderInputReader Error: Buffer is null in hasFaderChanged()" << std::endl;
-        return false;
-    }
-
-    // Step 2: Validate fader number range
-    if (fader_number < 1 || fader_number > FADER_COUNT) {
-        std::cerr << "FaderInputReader Error: Invalid fader number " << fader_number 
-                  << " in hasFaderChanged()" << std::endl;
-        return false;
-    }
-
     // Step 3: Check if we have previous values to compare against
     if (!initialized) {
         return false;  // No previous state to compare
@@ -87,7 +61,7 @@ bool FaderInputReader::hasFaderChanged(const unsigned char* buffer, int fader_nu
 
     // Step 4: Get current and previous values
     float current_value = getFaderValue(buffer, fader_number);
-    float previous_value = previous_values[fader_number - 1];  // Convert to 0-3 indexing
+    float previous_value = previous_values[fader_number];  // Convert to 0-3 indexing
 
     // Step 5: Calculate absolute difference and compare to threshold
     float difference = std::abs(current_value - previous_value);
@@ -102,15 +76,8 @@ bool FaderInputReader::hasFaderChanged(const unsigned char* buffer, int fader_nu
 * @param buffer: The 22-byte input report from readInputReport()
 */
 void FaderInputReader::updateFaderStates(const unsigned char* buffer) {
-    // Step 1: Check if buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "FaderInputReader Error: Buffer is null in updateFaderStates()" << std::endl;
-        return;
-    }
-
-    // Step 2: Update all fader values for next frame
-    for (int fader = 1; fader <= FADER_COUNT; fader++) {
-        previous_values[fader - 1] = getFaderValue(buffer, fader);
+    for (int fader = 0; fader < FADER_COUNT; fader++) {
+        previous_values[fader] = getFaderValue(buffer, fader);
     }
 
     // Step 3: Mark as initialized
@@ -125,19 +92,6 @@ void FaderInputReader::updateFaderStates(const unsigned char* buffer) {
 * @return: Raw 12-bit value (0-4095)
 */
 uint16_t FaderInputReader::getRawFaderValue(const unsigned char* buffer, int fader_number) {
-    // Step 1: Check if buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "FaderInputReader Error: Buffer is null in getRawFaderValue()" << std::endl;
-        return 0;
-    }
-
-    // Step 2: Validate fader number range
-    if (fader_number < 1 || fader_number > FADER_COUNT) {
-        std::cerr << "FaderInputReader Error: Invalid fader number " << fader_number 
-                  << " in getRawFaderValue()" << std::endl;
-        return 0;
-    }
-
     // Step 3: Extract and return raw value
     return extractRawFaderValue(buffer, fader_number);
 }
@@ -155,10 +109,10 @@ void FaderInputReader::printFaderValues(const unsigned char* buffer) {
     }
 
     // Step 2: Get all fader values
-    float fader1 = getFaderValue(buffer, 1);
-    float fader2 = getFaderValue(buffer, 2);
-    float fader3 = getFaderValue(buffer, 3);
-    float fader4 = getFaderValue(buffer, 4);
+    float fader1 = getFaderValue(buffer, 0);
+    float fader2 = getFaderValue(buffer, 1);
+    float fader3 = getFaderValue(buffer, 2);
+    float fader4 = getFaderValue(buffer, 3);
 
     // Step 3: Print values with consistent formatting
     std::cout << "Fader Values: "

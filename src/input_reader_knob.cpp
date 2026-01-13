@@ -36,22 +36,8 @@ bool KnobInputReader::initialize() {
 * @return: Normalized float value from 0.000 to 1.000
 */
 float KnobInputReader::getKnobValue(const unsigned char* buffer, int knob_number) {
-    // Step 1: Check if device buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "KnobInputReader Error: Buffer is null" << std::endl;
-        return 0.0f;
-    }
-
-    // Step 2: Validate knob number range
-    if (knob_number < 1 || knob_number > KNOB_COUNT) {
-        std::cerr << "KnobInputReader Error: Invalid knob number " << knob_number 
-                  << ". Must be 1-" << KNOB_COUNT << std::endl;
-        return 0.0f;
-    }
-
     // Step 3: Extract raw 12-bit value from buffer
     uint16_t raw_value = extractRawKnobValue(buffer, knob_number);
-
     // Step 4: Convert raw value to normalized float
     float normalized_value = rawToNormalized(raw_value);
 
@@ -67,18 +53,6 @@ float KnobInputReader::getKnobValue(const unsigned char* buffer, int knob_number
 * @return: true if knob has changed significantly, false otherwise
 */
 bool KnobInputReader::hasKnobChanged(const unsigned char* buffer, int knob_number, float threshold) {
-    // Step 1: Check if buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "KnobInputReader Error: Buffer is null in hasKnobChanged()" << std::endl;
-        return false;
-    }
-
-    // Step 2: Validate knob number range
-    if (knob_number < 1 || knob_number > KNOB_COUNT) {
-        std::cerr << "KnobInputReader Error: Invalid knob number " << knob_number 
-                  << " in hasKnobChanged()" << std::endl;
-        return false;
-    }
 
     // Step 3: Check if we have previous values to compare against
     if (!initialized) {
@@ -87,7 +61,7 @@ bool KnobInputReader::hasKnobChanged(const unsigned char* buffer, int knob_numbe
 
     // Step 4: Get current and previous values
     float current_value = getKnobValue(buffer, knob_number);
-    float previous_value = previous_values[knob_number - 1];  // Convert to 0-3 indexing
+    float previous_value = previous_values[knob_number];  // Convert to 0-3 indexing
 
     // Step 5: Calculate absolute difference and compare to threshold
     float difference = std::abs(current_value - previous_value);
@@ -109,8 +83,8 @@ void KnobInputReader::updateKnobStates(const unsigned char* buffer) {
     }
 
     // Step 2: Update all knob values for next frame
-    for (int knob = 1; knob <= KNOB_COUNT; knob++) {
-        previous_values[knob - 1] = getKnobValue(buffer, knob);
+    for (int knob = 0; knob < 4; knob++) {
+        previous_values[knob] = getKnobValue(buffer, knob);
     }
 
     // Step 3: Mark as initialized
@@ -132,7 +106,7 @@ void KnobInputReader::updateKnobStates(const unsigned char* buffer) {
 uint16_t KnobInputReader::extractRawKnobValue(const unsigned char* buffer, int knob_number) const {
     // Step 1: Calculate byte positions for this knob
     // Knob 1: bytes 6-7, Knob 2: bytes 8-9, Knob 3: bytes 10-11, Knob 4: bytes 12-13
-    int byte_offset = (knob_number - 1) * KNOB_BYTES_PER_KNOB;
+    int byte_offset = (knob_number) * KNOB_BYTES_PER_KNOB;
     int lsb_position = KNOB_BYTE_START + byte_offset;      // LSB position
     int msb_position = KNOB_BYTE_START + byte_offset + 1;  // MSB position
 
@@ -197,19 +171,6 @@ uint16_t KnobInputReader::clampRawValue(uint16_t raw_value) const {
 * @return: Raw 12-bit value (0-4095)
 */
 uint16_t KnobInputReader::getRawKnobValue(const unsigned char* buffer, int knob_number) {
-    // Step 1: Check if buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "KnobInputReader Error: Buffer is null in getRawKnobValue()" << std::endl;
-        return 0;
-    }
-
-    // Step 2: Validate knob number range
-    if (knob_number < 1 || knob_number > KNOB_COUNT) {
-        std::cerr << "KnobInputReader Error: Invalid knob number " << knob_number 
-                  << " in getRawKnobValue()" << std::endl;
-        return 0;
-    }
-
     // Step 3: Extract and return raw value
     return extractRawKnobValue(buffer, knob_number);
 }
@@ -227,10 +188,10 @@ void KnobInputReader::printKnobValues(const unsigned char* buffer) {
     }
 
     // Step 2: Get all knob values
-    float knob_value_1 = getKnobValue(buffer, 1);
-    float knob_value_2 = getKnobValue(buffer, 2);
-    float knob_value_3 = getKnobValue(buffer, 3);
-    float knob_value_4 = getKnobValue(buffer, 4);
+    float knob_value_1 = getKnobValue(buffer, 0);
+    float knob_value_2 = getKnobValue(buffer, 1);
+    float knob_value_3 = getKnobValue(buffer, 2);
+    float knob_value_4 = getKnobValue(buffer, 3);
 
     // Step 3: Print values with consistent formatting
     std::cout << "Knob Values: "

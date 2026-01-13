@@ -12,8 +12,6 @@ const int INPUT_REPORT_SIZE = 22;            // F1 always sends 22-byte reports
 const unsigned char INPUT_REPORT_ID = 0x01;  // First byte is always 0x01
 
 // Byte positions in the input report
-const int BUTTON_BYTE_MATRIX_TOP = 1;       // Matrix buttons (1,1) to (4,2)
-const int BUTTON_BYTE_MATRIX_BOTTOM = 2;    // Matrix buttons (1,3) to (4,4)
 const int BUTTON_BYTE_SPECIAL = 3;          // Special buttons (shift, browse, etc.)
 const int BUTTON_BYTE_STOP_AND_CONTROL = 4; // Stop buttons and control buttons
 
@@ -94,7 +92,7 @@ bool readInputReport(hid_device* device, unsigned char* buffer);
 
 // Button checking functions
 bool isSpecialButtonPressed(const unsigned char* buffer, SpecialButton button);
-bool isStopButtonPressed(const unsigned char* buffer, StopButton button);
+bool isStopButtonPressed(const unsigned char* buffer, int button);
 bool isControlButtonPressed(const unsigned char* buffer, ControlButton button);
 bool isMatrixButtonPressed(const unsigned char* buffer, int row, int col);
 

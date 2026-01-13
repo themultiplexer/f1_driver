@@ -116,90 +116,55 @@ int main() {
 		// =============================================================================
 
 		while (true) {
+			// =======================================
+			// Read input report
+			// =======================================
+			unsigned char input_report_buffer[INPUT_REPORT_SIZE];
+			if (!readInputReport(device, input_report_buffer)) {
+					std::cerr << "Error, shutting down..." << std::endl;
+					return -1;
+			}
 
-				// =======================================
-				// Read input report
-				// =======================================
-				unsigned char input_report_buffer[INPUT_REPORT_SIZE];
-				if (!readInputReport(device, input_report_buffer)) {
-						std::cerr << "Error, shutting down..." << std::endl;
-						return -1;
-				}
+			// =======================================
+			// MIDI: Process matrix button changes
+			// =======================================
+			midi_handler.updateButtons(input_report_buffer);
+			midi_handler.updateMatrixButtonStates(input_report_buffer);
+			midi_handler.updateKnobStates(input_report_buffer);
+			midi_handler.updateFaderStates(input_report_buffer);
 
-				// =======================================
-				// MIDI: Process matrix button changes
-				// =======================================
-				midi_handler.updateMatrixButtonStates(input_report_buffer);
-				midi_handler.updateKnobStates(input_report_buffer);
-				midi_handler.updateFaderStates(input_report_buffer);
+			// =======================================
+			// Read and update Selector Wheel rotation
+			// =======================================
+			WheelDirection selector_wheel_direction = wheel_input_reader.checkWheelRotation(input_report_buffer);
 
-				// =======================================
-				// Read and update Selector Wheel rotation
-				// =======================================
-				// Get wheel direction
-				WheelDirection selector_wheel_direction = wheel_input_reader.checkWheelRotation(input_report_buffer);
+			// Select effects page accordingly
+			if (selector_wheel_direction == WheelDirection::CLOCKWISE) {
+				// increase page by 1
+				current_effect_page = std::min(current_effect_page + 1, 99);
+				// Update display
+				display_controller.setDisplayDot(1, false); // Turn off left dot when changing page
+				display_controller.setDisplayNumber(current_effect_page);
+			}
+			else if (selector_wheel_direction == WheelDirection::COUNTER_CLOCKWISE) {
+				// decrease page by 1
+				current_effect_page = std::max(current_effect_page - 1, 1);
+				// Update display
+				display_controller.setDisplayDot(1, false); // Turn off left dot when changing page
+				display_controller.setDisplayNumber(current_effect_page);
+			}
 
-				// Select effects page accordingly
-				if (selector_wheel_direction == WheelDirection::CLOCKWISE) {
-						// increase page by 1
-        		current_effect_page = std::min(current_effect_page + 1, 99);
-						// Update display
-						display_controller.setDisplayDot(1, false); // Turn off left dot when changing page
-						display_controller.setDisplayNumber(current_effect_page);
-					}
-					else if (selector_wheel_direction == WheelDirection::COUNTER_CLOCKWISE) {
-						// decrease page by 1
-						current_effect_page = std::max(current_effect_page - 1, 1);
-						// Update display
-						display_controller.setDisplayDot(1, false); // Turn off left dot when changing page
-						display_controller.setDisplayNumber(current_effect_page);
-					}
-
-				// Load effects page on selector wheel button press
-				if (isSpecialButtonPressed(input_report_buffer, SpecialButton::SELECTOR_WHEEL)) {
-						// Turn on left dot to indicate page is loaded
-						display_controller.setDisplayDot(1, true);
-				}
-
-				// =======================================
-				// Read and update Knob values
-				// =======================================
-				/*
-				//knob_input_reader.printKnobValues(input_report_buffer);
-				int knob_value_1 = knob_input_reader.getKnobValue(input_report_buffer, 1);
-				int knob_value_2 = knob_input_reader.getKnobValue(input_report_buffer, 2);
-				int knob_value_3 = knob_input_reader.getKnobValue(input_report_buffer, 3);
-				int knob_value_4 = knob_input_reader.getKnobValue(input_report_buffer, 4);
-
-				// =======================================
-				// Read and update Fader values
-				// =======================================
-				fader_input_reader.printFaderValues(input_report_buffer);
-				int fader_value_1 = fader_input_reader.getFaderValue(input_report_buffer, 1);
-				int fader_value_2 = fader_input_reader.getFaderValue(input_report_buffer, 2);
-				int fader_value_3 = fader_input_reader.getFaderValue(input_report_buffer, 3);
-				int fader_value_4 = fader_input_reader.getFaderValue(input_report_buffer, 4);
-
-				// Print knob and fader values for debugging
-				std::cout << "Knob Values: "
-								<< "1: " << std::fixed << std::setprecision(3) << knob_value_1 << " | "
-								<< "2: " << std::fixed << std::setprecision(3) << knob_value_2 << " | "
-								<< "3: " << std::fixed << std::setprecision(3) << knob_value_3 << " | "
-								<< "4: " << std::fixed << std::setprecision(3) << knob_value_4 << " || "
-								<< "Fader Values: "
-								<< "1: " << std::fixed << std::setprecision(3) << fader_value_1 << " | "
-								<< "2: " << std::fixed << std::setprecision(3) << fader_value_2 << " | "
-								<< "3: " << std::fixed << std::setprecision(3) << fader_value_3 << " | "
-								<< "4: " << std::fixed << std::setprecision(3) << fader_value_4 << " || "
-								<< "        \r"; // Carriage return to overwrite the line
-				std::cout.flush();
-				*/
+			// Load effects page on selector wheel button press
+			if (isSpecialButtonPressed(input_report_buffer, SpecialButton::SELECTOR_WHEEL)) {
+					// Turn on left dot to indicate page is loaded
+					display_controller.setDisplayDot(1, true);
+			}
 		}
 
 	// =============================================================================
 	// CODE CLOSES
 	//=============================================================================
-		// Clean up MIDI (NEW)
+	// Clean up MIDI (NEW)
 	midi_handler.cleanup();
 	
 	// Close the device

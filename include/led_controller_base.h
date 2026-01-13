@@ -159,7 +159,7 @@ bool setSpecialButtonLED(SpecialLEDButton button, float brightness, bool store_l
 bool setControlButtonLED(ControlLEDButton button, float brightness, bool store_led_state = true);
 
 // Stop button LED functions (each stop has 2 LEDs)
-bool setStopButtonLED(StopLEDButton button, float brightness, bool store_led_state = true);
+bool setStopButtonLED(int index, float brightness, bool store_led_state = true);
 
 // Color system functions
 BRGColor getColorWithBrightness(LEDColor color, float brightness);
@@ -194,9 +194,6 @@ LEDState getSpecialButtonState(SpecialLEDButton button);
 
 // Get original state for control buttons
 LEDState getControlButtonState(ControlLEDButton button);
-
-// Get original state for stop buttons
-LEDState getStopButtonState(StopLEDButton button);
 
 
 // =============================================================================
