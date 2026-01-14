@@ -31,15 +31,13 @@ bool readInputReport(hid_device *device, unsigned char *buffer) {
         std::cerr << "readInputReport Error: Buffer is null" << std::endl;
         return false;
     }
-
+    hid_set_nonblocking(device,1);
     // Step 3: Try to read input report from the F1
     // hid_read() returns the number of bytes actually read
     int bytes_read = hid_read(device, buffer, INPUT_REPORT_SIZE);
 
-    // Step 4: Check if the read operation was successfull
-    if (bytes_read < 0) {
-        std::cerr << "readInputReport Error: Expected " << INPUT_REPORT_SIZE
-                  << " bytes, but got " << bytes_read << " bytes" << std::endl;
+
+    if (bytes_read <= 0) {
         return false;
     }
     
