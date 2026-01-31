@@ -91,9 +91,9 @@ enum class ControlButton {
 bool readInputReport(hid_device* device, unsigned char* buffer);
 
 // Button checking functions
-bool isSpecialButtonPressed(const unsigned char* buffer, SpecialButton button);
+bool isSpecialButtonPressed(const unsigned char* buffer, int index);
 bool isStopButtonPressed(const unsigned char* buffer, int button);
-bool isControlButtonPressed(const unsigned char* buffer, ControlButton button);
+bool isControlButtonPressed(const unsigned char* buffer, int index);
 bool isMatrixButtonPressed(const unsigned char* buffer, int row, int col);
 
 // Utility functions for testing and debugging

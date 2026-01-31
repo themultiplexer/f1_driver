@@ -101,23 +101,15 @@ bool ControllerHandler::run() {
         if (selector_wheel_direction == WheelDirection::CLOCKWISE) {
             // increase page by 1
             current_effect_page = std::min(current_effect_page + 1, 99);
-            // Update display
-            display_controller.setDisplayDot(1, false); // Turn off left dot when changing page
-            display_controller.setDisplayNumber(current_effect_page);
+            delegate->sendWheelChanged(current_effect_page);
         }
         else if (selector_wheel_direction == WheelDirection::COUNTER_CLOCKWISE) {
             // decrease page by 1
             current_effect_page = std::max(current_effect_page - 1, 1);
-            // Update display
-            display_controller.setDisplayDot(1, false); // Turn off left dot when changing page
-            display_controller.setDisplayNumber(current_effect_page);
+            delegate->sendWheelChanged(current_effect_page);
         }
 
-        // Load effects page on selector wheel button press
-        if (isSpecialButtonPressed(input_report_buffer, SpecialButton::SELECTOR_WHEEL)) {
-            // Turn on left dot to indicate page is loaded
-            display_controller.setDisplayDot(1, true);
-        }
+
         return true;
 }
 
@@ -125,24 +117,40 @@ void ControllerHandler::setStopButton(int index, float brightness) {
     setStopButtonLED(index, brightness);
 }
 
+void ControllerHandler::setMatrixButton(int row, int col, BRGColor color, float brightness) {
+    color.red *= brightness;
+    color.green *= brightness;
+    color.blue *= brightness;
+    setMatrixButtonLED(row, col, color, false);
+}
+
 void ControllerHandler::setMatrixButton(int row, int col, LEDColor color, float brightness) {
     setMatrixButtonLED(row, col, color, brightness, false);
 }
 
-void ControllerHandler::setSpecialButton(SpecialLEDButton button, float brightness) {
-    setSpecialButtonLED(button, brightness);
+void ControllerHandler::setPage(int page) {
+    current_effect_page = page;
+    display_controller.setDisplayDot(1, false);
+    display_controller.setDisplayNumber(current_effect_page);
 }
 
-bool was_pressed = false;
+void ControllerHandler::setButton(LEDButton button, float brightness) {
+    setButtonLED(button, brightness);
+}
+
+bool specialPressed[9] = {false};
 
 void ControllerHandler::updateButtons(const unsigned char* input_buffer) {
-    if (isSpecialButtonPressed(input_buffer, SpecialButton::SHIFT)) {
-        std::cerr << "Shift pressed..." << std::endl;
-        delegate->sendButtonPress(4);
-        was_pressed = true;
-    } else if (was_pressed) {
-        delegate->sendButtonRelease(4);
-        was_pressed = false;
+
+    for (int i = 0; i < 9; i++) {
+        if (isSpecialButtonPressed(input_buffer, i)) {
+            std::cerr << "Special pressed..." << std::endl;
+            delegate->sendButtonPress(4 + i);
+            specialPressed[i] = true;
+        } else if (specialPressed[i]) {
+            delegate->sendButtonRelease(4 + i);
+            specialPressed[i] = false;
+        }
     }
 
     for (int i = 0; i < 4; i++) {
@@ -213,10 +221,17 @@ void ControllerHandler::updateFaderStates(const unsigned char* input_buffer) {
         
         // Check if value has changed (allow for some tolerance)
         int previous_value = analog_state.previous_fader_values[fader];
-        
+
         if (current_value != previous_value) {
-            delegate->sendSliderChanged(fader, current_value  * 2);
+            analog_state.is_fader_value_dirty[fader] = true;
         }
+        auto now = std::chrono::system_clock::now();
+        if (analog_state.is_fader_value_dirty[fader] && std::chrono::duration_cast<std::chrono::milliseconds>(now - analog_state.last_slider_change[fader]).count() > 50) {
+            delegate->sendSliderChanged(fader, current_value * 2);
+            analog_state.is_fader_value_dirty[fader] = false;
+            analog_state.last_slider_change[fader] = now;
+        }
+
         analog_state.previous_fader_values[fader] = current_value;
     }
 }

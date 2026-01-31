@@ -46,30 +46,6 @@ float FaderInputReader::getFaderValue(const unsigned char* buffer, int fader_num
 }
 
 /*
-* Check if a fader value has changed since the last frame
-* 
-* @param buffer: The 22-byte input report from readInputReport()
-* @param fader_number: Which fader to check (1-4)
-* @param threshold: Minimum change to consider significant (default 0.01 = 1%)
-* @return: true if fader has changed significantly, false otherwise
-*/
-bool FaderInputReader::hasFaderChanged(const unsigned char* buffer, int fader_number, float threshold) {
-    // Step 3: Check if we have previous values to compare against
-    if (!initialized) {
-        return false;  // No previous state to compare
-    }
-
-    // Step 4: Get current and previous values
-    float current_value = getFaderValue(buffer, fader_number);
-    float previous_value = previous_values[fader_number];  // Convert to 0-3 indexing
-
-    // Step 5: Calculate absolute difference and compare to threshold
-    float difference = std::abs(current_value - previous_value);
-    
-    return difference > threshold;
-}
-
-/*
 * Update stored fader states for next frame comparison
 * Call this once per frame after reading all fader values you need
 * 
@@ -139,7 +115,7 @@ void FaderInputReader::printFaderValues(const unsigned char* buffer) {
 uint16_t FaderInputReader::extractRawFaderValue(const unsigned char* buffer, int fader_number) const {
     // Step 1: Calculate byte positions for this fader
     // Fader 1: bytes 14-15, Fader 2: bytes 16-17, Fader 3: bytes 18-19, Fader 4: bytes 20-21
-    int byte_offset = (fader_number - 1) * FADER_BYTES_PER_FADER;
+    int byte_offset = fader_number * FADER_BYTES_PER_FADER;
     int lsb_position = FADER_BYTE_START + byte_offset;      // LSB position
     int msb_position = FADER_BYTE_START + byte_offset + 1;  // MSB position
 

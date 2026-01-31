@@ -193,17 +193,15 @@ void startupSequence(hid_device* device) {
     
     std::cout << "  - Animation complete, setting final LED state..." << std::endl;
     
-    // Set all special button LEDs
-    setSpecialButtonLED(SpecialLEDButton::BROWSE, 0.1f, true);
-    setSpecialButtonLED(SpecialLEDButton::SIZE, 0.1f, true);
-    setSpecialButtonLED(SpecialLEDButton::TYPE, 0.1f, true);
-    setSpecialButtonLED(SpecialLEDButton::REVERSE, 0.1f, true);
-    setSpecialButtonLED(SpecialLEDButton::SHIFT, 0.1f, true);
-
-    // Set all control buttons
-    setControlButtonLED(ControlLEDButton::CAPTURE, 0.1f, true);
-    setControlButtonLED(ControlLEDButton::QUANT, 0.1f, true);
-    setControlButtonLED(ControlLEDButton::SYNC, 0.1f, true);
+    // Set all button LEDs
+    setButtonLED(LEDButton::BROWSE, 0.1f, true);
+    setButtonLED(LEDButton::SIZE, 0.1f, true);
+    setButtonLED(LEDButton::TYPE, 0.1f, true);
+    setButtonLED(LEDButton::REVERSE, 0.1f, true);
+    setButtonLED(LEDButton::SHIFT, 0.1f, true);
+    setButtonLED(LEDButton::CAPTURE, 0.1f, true);
+    setButtonLED(LEDButton::QUANT, 0.1f, true);
+    setButtonLED(LEDButton::SYNC, 0.1f, true);
  
     std::cout << "  - Startup sequence completed!" << std::endl;
 }

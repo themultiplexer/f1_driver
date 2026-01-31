@@ -40,8 +40,7 @@ public:
     
     // Main functions
     float getFaderValue(const unsigned char* buffer, int fader_number);
-    bool hasFaderChanged(const unsigned char* buffer, int fader_number, float threshold = 0.01f);  // ==== UNUSED ====
-    
+
     // Update function - call this once per frame after reading all fader values
     void updateFaderStates(const unsigned char* buffer);  // ==== UNUSED ====
     

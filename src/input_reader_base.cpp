@@ -67,42 +67,16 @@ bool readInputReport(hid_device *device, unsigned char *buffer) {
 * @return: true if the button is pressed, false if not pressed
 */
 
-bool isSpecialButtonPressed(const unsigned char* buffer, SpecialButton button) {
-    // Step 2: Get the special buttons byte (byte 3 in the report)
-    unsigned char special_byte = buffer[BUTTON_BYTE_SPECIAL];  // buffer[3]
-
-    // Step 3: Determine which bit mask to use based on the button requested
-    unsigned char button_mask;
-
-    switch (button) {
-        case SpecialButton::SHIFT:
-            button_mask = BIT_MASK_SHIFT;           // 0x80 (bit 7)
-            break;
-        case SpecialButton::REVERSE:
-            button_mask = BIT_MASK_REVERSE;         // 0x40 (bit 6)
-            break;
-        case SpecialButton::TYPE:
-            button_mask = BIT_MASK_TYPE;            // 0x20 (bit 5)
-            break;
-        case SpecialButton::SIZE:
-            button_mask = BIT_MASK_SIZE;            // 0x10 (bit 4)
-            break;
-        case SpecialButton::BROWSE:
-            button_mask = BIT_MASK_BROWSE;          // 0x08 (bit 3)
-            break;
-        case SpecialButton::SELECTOR_WHEEL:
-            button_mask = BIT_MASK_SELECTOR_WHEEL;  // 0x04 (bit 2)
-            break;
-        default:
-            std::cerr << "Error: Unknown special button requested" << std::endl;
-            return false;
+bool isSpecialButtonPressed(const unsigned char* buffer, int index) {
+    if (index < 6) {
+        unsigned char special_byte = buffer[BUTTON_BYTE_SPECIAL];
+        unsigned char button_mask = 0x01 << (7-index); // SHIFT,REVERSE,TYPE,SIZE,BROWSE,SELECTOR_WHEEL
+        return (special_byte & button_mask) != 0;
+    } else {
+        unsigned char control_byte = buffer[BUTTON_BYTE_STOP_AND_CONTROL];  //SYNC, QUANT, CAPTURE
+        unsigned char button_mask = 0x01 << (3 - (index-6));
+        return (control_byte & button_mask) != 0;
     }
-
-    // Step 4: Use bitwise AND to check if the specific bit is set
-    bool is_pressed = (special_byte & button_mask) != 0;
-
-    // Step 5: Return the result
-    return is_pressed;
 }
 
 // =============================================================================
@@ -121,54 +95,9 @@ bool isSpecialButtonPressed(const unsigned char* buffer, SpecialButton button) {
 bool isStopButtonPressed(const unsigned char* buffer, int button) {
     // Step 2: Get the stop buttons byte (byte 3 in the report)
     unsigned char stop_byte = buffer[BUTTON_BYTE_STOP_AND_CONTROL];  // buffer[4]
-    unsigned char button_mask = 0x01 << (7 - button);
+    unsigned char button_mask = 0x01 << (7 - button); // STOP1, STOP2, STOP3, STOP4
     bool is_pressed = (stop_byte & button_mask) != 0;
 
-    return is_pressed;
-}
-
-/*
-* Checks if a specific control button is currently pressed
-* Control buttons are: SYNC, QUANT, CAPTURE
-* 
-* @param buffer: The 22-byte input report from readInputReport()
-* @param button: Which special button to check (using the enum)
-* @return: true if the button is pressed, false if not pressed
-*/
-
-bool isControlButtonPressed(const unsigned char* buffer, ControlButton button) {
-
-    // Step 1: Safety check - make sure buffer is valid
-    if (buffer == nullptr) {
-        std::cerr << "Error: Buffer is null in isControlButtonPressed()" << std::endl;
-        return false;
-    }
-
-    // Step 2: Get the control buttons byte (byte 3 in the report)
-    unsigned char control_byte = buffer[BUTTON_BYTE_STOP_AND_CONTROL];  // buffer[4]
-
-    // Step 3: Determine which bit mask to use based on the button requested
-    unsigned char button_mask;
-
-    switch (button) {
-        case ControlButton::SYNC:
-            button_mask = BIT_MASK_SYNC;           // 0x80 (bit 7)
-            break;
-        case ControlButton::QUANT:
-            button_mask = BIT_MASK_QUANT;           // 0x40 (bit 6)
-            break;
-        case ControlButton::CAPTURE:
-            button_mask = BIT_MASK_CAPTURE;       // 0x20 (bit 5)
-            break;
-        default:
-            std::cerr << "Error: Unknown control button requested" << std::endl;
-            return false;
-    }
-
-    // Step 4: Use bitwise AND to check if the specific bit is set
-    bool is_pressed = (control_byte & button_mask) != 0;
-
-    // Step 5: Return the result
     return is_pressed;
 }
 

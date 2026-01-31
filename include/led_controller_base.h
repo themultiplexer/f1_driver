@@ -91,19 +91,15 @@ enum class LEDColor {
 };
 
 // Special buttons enum (matches input_reader structure)
-enum class SpecialLEDButton {
+enum class LEDButton {
+    CAPTURE,
+    QUANT,
+    SYNC,
     BROWSE,
     SIZE,
     TYPE,
     REVERSE,
     SHIFT
-};
-
-// Control buttons enum (matches input_reader structure)
-enum class ControlLEDButton {
-    CAPTURE,
-    QUANT,
-    SYNC
 };
 
 // Stop buttons enum (matches input_reader structure) 
@@ -150,13 +146,11 @@ bool sendLEDReport(hid_device* device);
 void clearAllLEDs();
 
 // Matrix LED functions (RGB buttons)
+bool setMatrixButtonLED(int row, int col, BRGColor color, bool store_led_state = true);
 bool setMatrixButtonLED(int row, int col, LEDColor color, float brightness, bool store_led_state = true);
 
-// Special button LED functions (single brightness)  
-bool setSpecialButtonLED(SpecialLEDButton button, float brightness, bool store_led_state = true);
-
-// Control button LED functions (single brightness)
-bool setControlButtonLED(ControlLEDButton button, float brightness, bool store_led_state = true);
+// button LED functions (single brightness)
+bool setButtonLED(LEDButton button, float brightness, bool store_led_state = true);
 
 // Stop button LED functions (each stop has 2 LEDs)
 bool setStopButtonLED(int index, float brightness, bool store_led_state = true);
@@ -178,10 +172,7 @@ BRGColor getColorWithBrightness(LEDColor color, float brightness);
 */
 
 // Get index for special button enum (maps enum to array index)
-int getSpecialButtonIndex(SpecialLEDButton button);
-
-// Get index for control button enum (maps enum to array index)
-int getControlButtonIndex(ControlLEDButton button);
+int getSpecialButtonIndex(LEDButton button);
 
 // Get index for stop button enum (maps enum to array index)
 int getStopButtonIndex(StopLEDButton button);
@@ -190,10 +181,7 @@ int getStopButtonIndex(StopLEDButton button);
 LEDStateMatrix getMatrixButtonState(int row, int col);
 
 // Get original state for special buttons  
-LEDState getSpecialButtonState(SpecialLEDButton button);
-
-// Get original state for control buttons
-LEDState getControlButtonState(ControlLEDButton button);
+LEDState getButtonState(LEDButton button);
 
 
 // =============================================================================

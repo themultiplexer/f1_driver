@@ -25,7 +25,10 @@ if(APPLE)
     )
 else()
     # Linux approach
-    find_path(HIDAPI_INCLUDE_DIR hidapi/hidapi.h)
+    find_path(HIDAPI_INCLUDE_DIR
+            NAMES hidapi.h
+            PATH_SUFFIXES
+            hidapi)
     find_library(HIDAPI_LIBRARY NAMES hidapi-libusb hidapi)
 endif()
 
@@ -45,6 +48,13 @@ add_library(f1_driver
     src/startup_sequence.cpp
     src/controller_handler.cpp
     include/controller_handler.h
+    include/input_reader_base.h
+    include/input_reader_fader.h
+    include/input_reader_knob.h
+    include/input_reader_wheel.h
+    include/led_controller_base.h
+    include/led_controller_display.h
+    include/startup_sequence.h
 )
 
 # Include directories

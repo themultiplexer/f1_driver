@@ -2,7 +2,8 @@
 #define MIDI_HANDLER_H
 
 #include <rtmidi/RtMidi.h>    // RtMidi library for MIDI handling
-#include <vector>             // For std::vector used in RtMidi
+#include <vector>
+#include <chrono>
 #include <iostream>           // For std::cout and std::cerr
 #include "input_reader_base.h"  // For matrix button checking functions
 #include "input_reader_knob.h"  // For knob input reading
@@ -40,6 +41,9 @@ struct AnalogControlState {
     int previous_knob_values[4];    // Previous knob values for change detection
     int previous_fader_values[4];   // Previous fader values for change detection
 
+    bool is_fader_value_dirty[4];
+    std::chrono::time_point<std::chrono::system_clock> last_slider_change[4];
+
     // Constructor to initialize all values to -1 (invalid)
     AnalogControlState() {
         for (int i = 0; i < 4; i++) {
@@ -55,6 +59,7 @@ public:
     virtual void sendButtonRelease(int index) = 0;
     virtual void sendKnobChanged(int index, int value) = 0;
     virtual void sendSliderChanged(int index, int value) = 0;
+    virtual void sendWheelChanged(int page) = 0;
     virtual void sendMatrixButtonPress(int row, int col) = 0;
     virtual void sendMatrixButtonRelease(int row, int col) = 0;
 };
@@ -103,7 +108,9 @@ public:
     void close();
     void setStopButton(int index, float brightness);
     void setMatrixButton(int row, int col, LEDColor color, float brightness);
-    void setSpecialButton(SpecialLEDButton button, float brightness);
+    void setMatrixButton(int row, int col, BRGColor color, float brightness = 1.0);
+    void setButton(LEDButton button, float brightness);
+    void setPage(int page);
 };
 
 #endif // MIDI_HANDLER_H
