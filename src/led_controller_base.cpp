@@ -145,123 +145,11 @@ LEDState getButtonState(LEDButton button) {
 * @param brightness: Brightness level (0.0 = off, 1.0 = full brightness)
 * @return: BRGColor structure with blue, red, green values (7-bit each)
 */
-BRGColor getColorWithBrightness(LEDColor color, float brightness) {
 
-    // Initialize result color
-    BRGColor result;
-    
-    // Define all colors in RGB format, then convert to BRG with brightness
-    switch(color) {
-        case LEDColor::black:           // NEW: Off/no color
-            result.blue = convertTo7Bit(0, brightness);
-            result.red = convertTo7Bit(0, brightness);
-            result.green = convertTo7Bit(0, brightness);
-            break;
-            
-        case LEDColor::red:
-            result.blue = convertTo7Bit(0, brightness);
-            result.red = convertTo7Bit(255, brightness);
-            result.green = convertTo7Bit(0, brightness);
-            break;
-            
-        case LEDColor::orange:
-            result.blue = convertTo7Bit(45, brightness);
-            result.red = convertTo7Bit(255, brightness);
-            result.green = convertTo7Bit(97, brightness);
-            break;
-            
-        case LEDColor::lightorange:
-            result.blue = convertTo7Bit(0, brightness);
-            result.red = convertTo7Bit(255, brightness);
-            result.green = convertTo7Bit(148, brightness);
-            break;
-            
-        case LEDColor::warmyellow:
-            result.blue = convertTo7Bit(0, brightness);
-            result.red = convertTo7Bit(255, brightness);
-            result.green = convertTo7Bit(213, brightness);
-            break;
-            
-        case LEDColor::yellow:
-            result.blue = convertTo7Bit(0, brightness);
-            result.red = convertTo7Bit(255, brightness);
-            result.green = convertTo7Bit(255, brightness);
-            break;
-            
-        case LEDColor::lime:
-            result.blue = convertTo7Bit(0, brightness);
-            result.red = convertTo7Bit(144, brightness);
-            result.green = convertTo7Bit(255, brightness);
-            break;
-            
-        case LEDColor::green:
-            result.blue = convertTo7Bit(0, brightness);
-            result.red = convertTo7Bit(0, brightness);
-            result.green = convertTo7Bit(255, brightness);
-            break;
-            
-        case LEDColor::mint:
-            result.blue = convertTo7Bit(165, brightness);
-            result.red = convertTo7Bit(0, brightness);
-            result.green = convertTo7Bit(255, brightness);
-            break;
-            
-        case LEDColor::cyan:
-            result.blue = convertTo7Bit(255, brightness);
-            result.red = convertTo7Bit(0, brightness);
-            result.green = convertTo7Bit(255, brightness);
-            break;
-            
-        case LEDColor::turquise:
-            result.blue = convertTo7Bit(255, brightness);
-            result.red = convertTo7Bit(0, brightness);
-            result.green = convertTo7Bit(206, brightness);
-            break;
-            
-        case LEDColor::blue:
-            result.blue = convertTo7Bit(255, brightness);
-            result.red = convertTo7Bit(0, brightness);
-            result.green = convertTo7Bit(49, brightness);
-            break;
-            
-        case LEDColor::plum:
-            result.blue = convertTo7Bit(218, brightness);
-            result.red = convertTo7Bit(69, brightness);
-            result.green = convertTo7Bit(49, brightness);
-            break;
-            
-        case LEDColor::violet:
-            result.blue = convertTo7Bit(217, brightness);
-            result.red = convertTo7Bit(125, brightness);
-            result.green = convertTo7Bit(41, brightness);
-            break;
-            
-        case LEDColor::purple:
-            result.blue = convertTo7Bit(255, brightness);
-            result.red = convertTo7Bit(229, brightness);
-            result.green = convertTo7Bit(18, brightness);
-            break;
-            
-        case LEDColor::magenta:
-            result.blue = convertTo7Bit(255, brightness);
-            result.red = convertTo7Bit(255, brightness);
-            result.green = convertTo7Bit(0, brightness);
-            break;
-            
-        case LEDColor::fuchsia:
-            result.blue = convertTo7Bit(136, brightness);
-            result.red = convertTo7Bit(255, brightness);
-            result.green = convertTo7Bit(0, brightness);
-            break;
-            
-        case LEDColor::white:
-            result.blue = convertTo7Bit(255, brightness);
-            result.red = convertTo7Bit(255, brightness);
-            result.green = convertTo7Bit(255, brightness);
-            break;
-    }
-    
-    return result;
+BRGColor colors[18] = {{0,0,0},{0, 255, 0},{45, 255, 97},{0, 255, 148},{0, 255, 213},{0, 255, 255},{0, 144, 255},{0, 0, 255},{165, 0, 255},{255, 0, 255},{255, 0, 206},{255, 0, 49},{218, 69, 49},{217, 125, 41},{255, 229, 18},{255, 255, 0},{136, 255, 0},{255, 255, 255 }};
+
+BRGColor getColor(LEDColor color) {
+    return colors[(int)color];
 }
 
 // =============================================================================
@@ -411,10 +299,10 @@ void clearAllLEDs() {
 * @return: true if successful, false if error
 */
 bool setMatrixButtonLED(int row, int col, LEDColor color, float brightness, bool store_led_state) {
-    return setMatrixButtonLED(row, col, getColorWithBrightness(color, brightness), store_led_state);
+    return setMatrixButtonLED(row, col, getColor(color), brightness, store_led_state);
 }
 
-bool setMatrixButtonLED(int row, int col, BRGColor color, bool store_led_state) {
+bool setMatrixButtonLED(int row, int col, BRGColor color, float brightness, bool store_led_state) {
     // Step 4: Calculate the byte position for this matrix button
     // Matrix mapping: (row-1) * 4 + (col-1) gives button index (0-15)
     // Each button has 3 bytes (BRG), so multiply by 3
@@ -422,9 +310,9 @@ bool setMatrixButtonLED(int row, int col, BRGColor color, bool store_led_state) 
     int base_byte = LED_BYTE_MATRIX_START + (button_index * MATRIX_LEDS_PER_BUTTON);
 
     // Step 6: Set the three LED bytes for this button (Blue, Red, Green order)
-    led_buffer[base_byte]     = color.blue;   // Blue LED
-    led_buffer[base_byte + 1] = color.red;    // Red LED
-    led_buffer[base_byte + 2] = color.green;  // Green LED
+    led_buffer[base_byte]     = convertTo7Bit(color.blue, brightness);   // Blue LED
+    led_buffer[base_byte + 1] = convertTo7Bit(color.red, brightness);    // Red LED
+    led_buffer[base_byte + 2] = convertTo7Bit(color.green, brightness);  // Green LED
     
     // Step 7: Send the updated buffer to the F1
     if (current_device != nullptr) {
@@ -593,34 +481,34 @@ void printLEDReport() {
     std::cout << "7-Seg Right (1-8):   ";
     for (int i = 1; i <= 8; i++) {
         std::cout << std::hex << std::setfill('0') << std::setw(2) 
-                  << (int)led_buffer[i] << " ";
+        << (int)led_buffer[i] << " ";
     }
     std::cout << std::endl;
     
     std::cout << "7-Seg Left (9-16):   ";
     for (int i = 9; i <= 16; i++) {
         std::cout << std::hex << std::setfill('0') << std::setw(2) 
-                  << (int)led_buffer[i] << " ";
+        << (int)led_buffer[i] << " ";
     }
     std::cout << std::endl;
     
     std::cout << "Special (17-21):     ";
     for (int i = 17; i <= 21; i++) {
         std::cout << std::hex << std::setfill('0') << std::setw(2) 
-                  << (int)led_buffer[i] << " ";
+        << (int)led_buffer[i] << " ";
     }
     std::cout << std::endl;
 
     std::cout << "Control (22-24):     ";
     for (int i = 22; i <= 24; i++) {
         std::cout << std::hex << std::setfill('0') << std::setw(2) 
-                  << (int)led_buffer[i] << " ";
+        << (int)led_buffer[i] << " ";
     }
 
     std::cout << "Matrix (25-72):      ";
     for (int i = 25; i <= 72; i++) {
         std::cout << std::hex << std::setfill('0') << std::setw(2) 
-                  << (int)led_buffer[i] << " ";
+        << (int)led_buffer[i] << " ";
         if ((i - 24) % 12 == 0) std::cout << std::endl << "                     ";
     }
     std::cout << std::endl;
@@ -628,7 +516,7 @@ void printLEDReport() {
     std::cout << "Stop (73-80):        ";
     for (int i = 73; i <= 80; i++) {
         std::cout << std::hex << std::setfill('0') << std::setw(2) 
-                  << (int)led_buffer[i] << " ";
+        << (int)led_buffer[i] << " ";
     }
     std::cout << std::dec << std::endl;  // Return to decimal mode
 }

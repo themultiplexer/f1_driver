@@ -97,14 +97,10 @@ bool ControllerHandler::run() {
         // =======================================
         WheelDirection selector_wheel_direction = wheel_input_reader.checkWheelRotation(input_report_buffer);
 
-        // Select effects page accordingly
         if (selector_wheel_direction == WheelDirection::CLOCKWISE) {
-            // increase page by 1
             current_effect_page = std::min(current_effect_page + 1, 99);
             delegate->sendWheelChanged(current_effect_page);
-        }
-        else if (selector_wheel_direction == WheelDirection::COUNTER_CLOCKWISE) {
-            // decrease page by 1
+        } else if (selector_wheel_direction == WheelDirection::COUNTER_CLOCKWISE) {
             current_effect_page = std::max(current_effect_page - 1, 1);
             delegate->sendWheelChanged(current_effect_page);
         }
@@ -118,10 +114,7 @@ void ControllerHandler::setStopButton(int index, float brightness) {
 }
 
 void ControllerHandler::setMatrixButton(int row, int col, BRGColor color, float brightness) {
-    color.red *= brightness;
-    color.green *= brightness;
-    color.blue *= brightness;
-    setMatrixButtonLED(row, col, color, false);
+    setMatrixButtonLED(row, col, color, brightness, false);
 }
 
 void ControllerHandler::setMatrixButton(int row, int col, LEDColor color, float brightness) {
@@ -221,11 +214,14 @@ void ControllerHandler::updateFaderStates(const unsigned char* input_buffer) {
         
         // Check if value has changed (allow for some tolerance)
         int previous_value = analog_state.previous_fader_values[fader];
-
-        if (current_value != previous_value) {
-            analog_state.is_fader_value_dirty[fader] = true;
-        }
         auto now = std::chrono::system_clock::now();
+        if (current_value != previous_value) {
+            if (!analog_state.is_fader_value_dirty[fader]) {
+                analog_state.last_slider_change[fader] = now;
+                analog_state.is_fader_value_dirty[fader] = true;
+            }
+        }
+
         if (analog_state.is_fader_value_dirty[fader] && std::chrono::duration_cast<std::chrono::milliseconds>(now - analog_state.last_slider_change[fader]).count() > 50) {
             delegate->sendSliderChanged(fader, current_value * 2);
             analog_state.is_fader_value_dirty[fader] = false;

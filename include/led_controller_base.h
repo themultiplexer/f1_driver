@@ -1,6 +1,7 @@
 #ifndef LED_CONTROLLER_BASE_H
 #define LED_CONTROLLER_BASE_H
 
+#include <cstdint>
 #include <hidapi/hidapi.h>
 
 // =============================================================================
@@ -63,9 +64,9 @@ const int MATRIX_COLS = 4;               // 4 columns in the matrix
 
 // Color structure for BRG format (hardware requirement)
 struct BRGColor {
-    unsigned char blue;
-    unsigned char red;
-    unsigned char green;
+    uint8_t blue;
+    uint8_t red;
+    uint8_t green;
 };
 
 // Available colors enum - makes code more readable
@@ -146,7 +147,7 @@ bool sendLEDReport(hid_device* device);
 void clearAllLEDs();
 
 // Matrix LED functions (RGB buttons)
-bool setMatrixButtonLED(int row, int col, BRGColor color, bool store_led_state = true);
+bool setMatrixButtonLED(int row, int col, BRGColor color, float brightness, bool store_led_state = true);
 bool setMatrixButtonLED(int row, int col, LEDColor color, float brightness, bool store_led_state = true);
 
 // button LED functions (single brightness)
@@ -156,7 +157,7 @@ bool setButtonLED(LEDButton button, float brightness, bool store_led_state = tru
 bool setStopButtonLED(int index, float brightness, bool store_led_state = true);
 
 // Color system functions
-BRGColor getColorWithBrightness(LEDColor color, float brightness);
+BRGColor getColor(LEDColor color);
 
 
 // =============================================================================
