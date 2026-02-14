@@ -1,6 +1,6 @@
 #include "controller_handler.h"
 
-ControllerHandler::ControllerHandler() : midi_out(nullptr), midi_in(nullptr), current_effect_page(1), display_controller(), wheel_input_reader() {
+ControllerHandler::ControllerHandler() : current_effect_page(1), display_controller(), wheel_input_reader() {
     // Constructor initializes pointers to null and sets initialized to false
     // =============================================================================
     // START UP SEQUENCE

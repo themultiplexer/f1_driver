@@ -1,7 +1,6 @@
 #ifndef MIDI_HANDLER_H
 #define MIDI_HANDLER_H
 
-#include <rtmidi/RtMidi.h>    // RtMidi library for MIDI handling
 #include <vector>
 #include <chrono>
 #include <iostream>           // For std::cout and std::cerr
@@ -67,8 +66,6 @@ public:
 
 class ControllerHandler {
 private:
-    RtMidiOut* midi_out;                    // MIDI output port
-    RtMidiIn* midi_in;                      // MIDI input port (for future LED control)
     MatrixButtonState button_state;         // Track button states for change detection
     AnalogControlState analog_state;        // Track knob and fader states for change detection
     ControllerDelegate *delegate;
