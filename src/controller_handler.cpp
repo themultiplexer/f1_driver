@@ -99,10 +99,10 @@ bool ControllerHandler::run() {
 
         if (selector_wheel_direction == WheelDirection::CLOCKWISE) {
             current_effect_page = std::min(current_effect_page + 1, 99);
-            delegate->sendWheelChanged(current_effect_page);
+            delegate->onWheelChanged(current_effect_page);
         } else if (selector_wheel_direction == WheelDirection::COUNTER_CLOCKWISE) {
             current_effect_page = std::max(current_effect_page - 1, 1);
-            delegate->sendWheelChanged(current_effect_page);
+            delegate->onWheelChanged(current_effect_page);
         }
 
 
@@ -137,18 +137,20 @@ void ControllerHandler::updateButtons(const unsigned char* input_buffer) {
 
     for (int i = 0; i < 9; i++) {
         if (isSpecialButtonPressed(input_buffer, i)) {
-            std::cerr << "Special pressed..." << std::endl;
-            delegate->sendButtonPress(4 + i);
-            specialPressed[i] = true;
+            if (!specialPressed[i]) {
+                std::cerr << "Special pressed..." << std::endl;
+                delegate->onButtonPress(4 + i);
+                specialPressed[i] = true;
+            }
         } else if (specialPressed[i]) {
-            delegate->sendButtonRelease(4 + i);
+            delegate->onButtonRelease(4 + i);
             specialPressed[i] = false;
         }
     }
 
     for (int i = 0; i < 4; i++) {
         if (isStopButtonPressed(input_buffer, i)) {
-            delegate->sendButtonPress(i);
+            delegate->onButtonPress(i);
         }
     }
 }
@@ -167,12 +169,10 @@ void ControllerHandler::updateMatrixButtonStates(const unsigned char* input_buff
             if (current_pressed != button_state.previous_state[row_index][col_index]) {
                 if (current_pressed) {
                     // Button was just pressed
-                    delegate->sendMatrixButtonPress(row, col);
-                    std::cout << "Matrix button (" << row << "," << col << ") pressed";
+                    delegate->onMatrixButtonPress(row, col);
                 } else {
                     // Button was just released
-                    delegate->sendMatrixButtonRelease(row, col);
-                    std::cout << "Matrix button (" << row << "," << col << ") released";
+                    delegate->onMatrixButtonRelease(row, col);
                 }
             }
             
@@ -197,7 +197,7 @@ void ControllerHandler::updateKnobStates(const unsigned char* input_buffer) {
         
         if (current_value != previous_value) {
             // Send MIDI CC message for knob change
-            delegate->sendKnobChanged(knob, current_value * 2);
+            delegate->onKnobChanged(knob, current_value * 2);
         }
         analog_state.previous_knob_values[knob] = current_value;
     }
@@ -223,7 +223,7 @@ void ControllerHandler::updateFaderStates(const unsigned char* input_buffer) {
         }
 
         if (analog_state.is_fader_value_dirty[fader] && std::chrono::duration_cast<std::chrono::milliseconds>(now - analog_state.last_slider_change[fader]).count() > 50) {
-            delegate->sendSliderChanged(fader, current_value * 2);
+            delegate->onSliderChanged(fader, current_value * 2);
             analog_state.is_fader_value_dirty[fader] = false;
             analog_state.last_slider_change[fader] = now;
         }

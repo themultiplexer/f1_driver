@@ -19,14 +19,11 @@
 bool readInputReport(hid_device *device, unsigned char *buffer) {
 
     // Step 1: Check if device is valid
-    // Checks if pointers are valid before using them! This prevents crashes.
     if (device == nullptr) {
-        std::cerr << "readInputReport Error: Device is null (not connected any longer?)" << std::endl;
         return false;
     }
 
     // Step 2: Check if buffer is valid
-    // Checks if pointers are valid before using them! This prevents crashes.
     if (buffer == nullptr) {
         std::cerr << "readInputReport Error: Buffer is null" << std::endl;
         return false;
