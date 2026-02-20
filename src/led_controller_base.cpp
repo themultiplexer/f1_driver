@@ -232,8 +232,6 @@ bool sendLEDReport(hid_device* device) {
     
     // Step 3: Check if the send operation was successful
     if (bytes_sent < 0) {
-        std::cerr << "Error: Failed to send LED report. Expected " 
-                  << LED_REPORT_SIZE << " bytes, sent " << bytes_sent << " bytes" << std::endl;
         return false;
     }
     

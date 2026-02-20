@@ -54,13 +54,13 @@ struct AnalogControlState {
 
 class ControllerDelegate {
 public:
-    virtual void sendButtonPress(int index) = 0;
-    virtual void sendButtonRelease(int index) = 0;
-    virtual void sendKnobChanged(int index, int value) = 0;
-    virtual void sendSliderChanged(int index, int value) = 0;
-    virtual void sendWheelChanged(int page) = 0;
-    virtual void sendMatrixButtonPress(int row, int col) = 0;
-    virtual void sendMatrixButtonRelease(int row, int col) = 0;
+    virtual void onButtonPress(int index) = 0;
+    virtual void onButtonRelease(int index) = 0;
+    virtual void onKnobChanged(int index, int value) = 0;
+    virtual void onSliderChanged(int index, int value) = 0;
+    virtual void onWheelChanged(int page) = 0;
+    virtual void onMatrixButtonPress(int row, int col) = 0;
+    virtual void onMatrixButtonRelease(int row, int col) = 0;
 };
 
 
@@ -104,7 +104,7 @@ public:
     bool run();
     void close();
     void setStopButton(int index, float brightness);
-    void setMatrixButton(int row, int col, LEDColor color, float brightness);
+    void setMatrixButton(int row, int col, LEDColor color, float brightness = 1.0);
     void setMatrixButton(int row, int col, BRGColor color, float brightness = 1.0);
     void setButton(LEDButton button, float brightness);
     void setPage(int page);
