@@ -279,8 +279,6 @@ void clearAllLEDs() {
     if (current_device != nullptr) {
         sendLEDReport(current_device);
         std::cout << "All LEDs cleared" << std::endl;
-    } else {
-        std::cerr << "Warning: No device connected, LEDs cleared in buffer only" << std::endl;
     }
 }
 
@@ -316,7 +314,6 @@ bool setMatrixButtonLED(int row, int col, BRGColor color, float brightness, bool
     if (current_device != nullptr) {
         return sendLEDReport(current_device);
     } else {
-        std::cerr << "Warning: No device connected, LED set in buffer only" << std::endl;
         return false;
     }
 }
@@ -369,7 +366,6 @@ bool setButtonLED(LEDButton button, float brightness, bool store_led_state) {
     if (current_device != nullptr) {
         return sendLEDReport(current_device);
     } else {
-        std::cerr << "Warning: No device connected, LED set in buffer only" << std::endl;
         return false;
     }
 }
@@ -413,7 +409,6 @@ bool setStopButtonLED(int index, float brightness, bool store_led_state) {
     if (current_device != nullptr) {
         return sendLEDReport(current_device);
     } else {
-        std::cerr << "Warning: No device connected, LED set in buffer only" << std::endl;
         return false;
     }
 }
